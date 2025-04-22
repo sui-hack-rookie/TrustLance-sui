@@ -11,7 +11,7 @@ import {
 import { db } from "./firebase";
 
 // Create a new contract document in Firestore
-export async function createContract(userId, role) {
+export async function createContract(userId, role, walletAddr) {
   try {
     // Create a reference to a new document with auto-generated ID
     const contractsRef = collection(db, "contracts");
@@ -28,10 +28,12 @@ export async function createContract(userId, role) {
       status: "pending", // pending, active, completed, cancelled
       [creatorRole]: {
         userId,
+        walletAddr: walletAddr,
         joined: true,
       },
       [partnerRole]: {
         userId: null,
+        walletAddr: null,
         joined: false,
       },
       terms: {
@@ -40,6 +42,8 @@ export async function createContract(userId, role) {
         rate: "",
         dueDate: null,
       },
+      isWorkDone: false,
+      workObjectId: null,
     };
 
     // Save the document
@@ -133,6 +137,35 @@ export async function getAllContracts(userId) {
     return contracts;
   } catch (error) {
     console.error("Error getting contract:", error);
+    throw error;
+  }
+}
+
+export async function updateContract(contractId, terms) {
+  try {
+    const contractRef = doc(db, "contracts", contractId);
+    const contractSnap = await getDoc(contractRef);
+
+    if (!contractSnap.exists()) {
+      throw new Error("Contract not found");
+    }
+
+    const contractData = contractSnap.data();
+
+    // Update the contract with the new terms
+    await setDoc(
+      contractRef,
+      {
+        ...contractData,
+        status: "active",
+        terms,
+      },
+      { merge: true },
+    );
+
+    return contractId;
+  } catch (error) {
+    console.error("Error updating contract:", error);
     throw error;
   }
 }

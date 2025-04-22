@@ -1,7 +1,13 @@
-import { useEffect, useState } from "react"
-import { Copy, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react";
+import { Copy, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -9,95 +15,100 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/lib/auth-context"
-import { createContract } from "@/lib/firestore"
-import { useNavigate } from "react-router-dom"
-import { getAllContracts } from "../../lib/firestore"
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth-context";
+import { createContract } from "@/lib/firestore";
+import { useNavigate } from "react-router-dom";
+import { getAllContracts } from "../../lib/firestore";
+import { ConnectButton, useWallet } from "@suiet/wallet-kit";
+import "@suiet/wallet-kit/style.css";
 
 export default function Dashboard() {
-  const { user, loading, signOut } = useAuth()
-  const router = useNavigate()
-  const { toast } = useToast()
-  const [contractId, setContractId] = useState(null)
-  const [isCreatingContract, setIsCreatingContract] = useState(false)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [contracts, setContracts] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
+  const { user, loading, signOut } = useAuth();
+  const router = useNavigate();
+  const { toast } = useToast();
+  const [contractId, setContractId] = useState(null);
+  const [isCreatingContract, setIsCreatingContract] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [contracts, setContracts] = useState([]);
+  const wallet = useWallet();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
-      router(`/signin`)
-      return
+      router(`/signin`);
+      return;
     }
 
     const fetchAllContracts = async () => {
       try {
-        const contractData = await getAllContracts(user.uid)
-        console.log(contractData)
-        setContracts(contractData)
+        const contractData = await getAllContracts(user.uid);
+        console.log(contractData);
+        setContracts(contractData);
       } catch (error) {
-        console.error("Error fetching contract:", error)
+        console.error("Error fetching contract:", error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load contracts. It may not exist or you don't have access.",
-        })
+          description:
+            "Failed to load contracts. It may not exist or you don't have access.",
+        });
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     if (user) {
-      fetchAllContracts()
+      fetchAllContracts();
     }
-  }, [user, loading, router, toast])
+  }, [user, loading, router, toast]);
 
   const handleCreateContract = async (role) => {
-    if (!user) return
+    if (!user) return;
 
-    setIsCreatingContract(true)
+    setIsCreatingContract(true);
     try {
-      const id = await createContract(user.uid, role)
-      setContractId(id)
+      const id = await createContract(user.uid, role, wallet.address);
+      setContractId(id);
       toast({
         title: "Contract Created",
         description: `Your ${role} contract has been created successfully.`,
-      })
+      });
     } catch (error) {
-      console.error("Error creating contract:", error)
+      console.error("Error creating contract:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "Failed to create contract. Please try again.",
-      })
+      });
     } finally {
-      setIsCreatingContract(false)
+      setIsCreatingContract(false);
     }
-  }
+  };
 
   const copyToClipboard = () => {
-    if (!contractId) return
+    if (!contractId) return;
 
-    const contractUrl = `${window.location.origin}/work?id=${contractId}`
-    navigator.clipboard.writeText(contractUrl)
+    const contractUrl = `${window.location.origin}/work?id=${contractId}`;
+    navigator.clipboard.writeText(contractUrl);
     toast({
       title: "Link Copied",
       description: "Contract link copied to clipboard!",
-    })
-  }
+    });
+  };
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <p>Loading...</p>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
@@ -117,7 +128,8 @@ export default function Dashboard() {
               <strong>Email:</strong> {user.email}
             </p>
             <p>
-              <strong>Email Verified:</strong> {user.emailVerified ? "Yes" : "No"}
+              <strong>Email Verified:</strong>{" "}
+              {user.emailVerified ? "Yes" : "No"}
             </p>
             <p>
               <strong>User ID:</strong> {user.uid}
@@ -140,45 +152,65 @@ export default function Dashboard() {
                 <DialogHeader>
                   <DialogTitle>Choose Your Role</DialogTitle>
                   <DialogDescription>
-                    Select whether you are a client hiring or a freelancer providing services.
+                    Select whether you are a client hiring or a freelancer
+                    providing services.
                   </DialogDescription>
                 </DialogHeader>
-
                 {contractId ? (
                   <div className="space-y-4">
                     <div className="rounded-md bg-muted p-3">
-                      <p className="mb-2 text-sm font-medium">Share this link with the other party:</p>
+                      <p className="mb-2 text-sm font-medium">
+                        Share this link with the other party:
+                      </p>
                       <div className="flex items-center gap-2 overflow-hidden rounded-md border bg-background p-2">
                         <p className="truncate text-sm">{`${window.location.origin}/work?id=${contractId}`}</p>
-                        <Button size="sm" variant="ghost" onClick={copyToClipboard}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={copyToClipboard}
+                        >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
-                    <Button onClick={() => router(`/work?id=${contractId}`)}>Go to Contract</Button>
+                    <Button onClick={() => router(`/work?id=${contractId}`)}>
+                      Go to Contract
+                    </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    <Card
-                      className="cursor-pointer transition-all hover:shadow-md"
-                      onClick={() => handleCreateContract("client")}
-                    >
-                      <CardHeader className="p-4">
-                        <CardTitle className="text-center text-lg">Client</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0 text-center text-sm">I want to hire someone</CardContent>
-                    </Card>
+                  <>
+                    <ConnectButton label="Connect Wallet to Continue" />
+                    <div className="grid grid-cols-2 gap-4 relative">
+                      {!wallet.connected && <div className="absolute inset-0 bg-white opacity-50 cursor-not-allowed"></div>}
+                      <Card
+                        className="cursor-pointer transition-all hover:shadow-md"
+                        onClick={() => handleCreateContract("client")}
+                      >
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-center text-lg">
+                            Client
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 text-center text-sm">
+                          I want to hire someone
+                        </CardContent>
+                      </Card>
 
-                    <Card
-                      className="cursor-pointer transition-all hover:shadow-md"
-                      onClick={() => handleCreateContract("freelancer")}
-                    >
-                      <CardHeader className="p-4">
-                        <CardTitle className="text-center text-lg">Freelancer</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 pt-0 text-center text-sm">I want to offer my services</CardContent>
-                    </Card>
-                  </div>
+                      <Card
+                        className="cursor-pointer transition-all hover:shadow-md"
+                        onClick={() => handleCreateContract("freelancer")}
+                      >
+                        <CardHeader className="p-4">
+                          <CardTitle className="text-center text-lg">
+                            Freelancer
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0 text-center text-sm">
+                          I want to offer my services
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </>
                 )}
 
                 {isCreatingContract && (
@@ -191,7 +223,7 @@ export default function Dashboard() {
           </div>
         </CardContent>
       </Card>
-      
+
       <Card className="mx-auto max-w-4xl mt-8">
         <CardHeader>
           <CardTitle>Contracts</CardTitle>
@@ -201,29 +233,60 @@ export default function Dashboard() {
             <table className="w-full text-sm text-left">
               <thead className="text-xs uppercase bg-muted">
                 <tr>
-                  <th scope="col" className="px-6 py-3">ID</th>
-                  <th scope="col" className="px-6 py-3">Role</th> 
-                  <th scope="col" className="px-6 py-3">Status</th>
-                  <th scope="col" className="px-6 py-3">Link</th>
+                  <th scope="col" className="px-6 py-3">
+                    ID
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Role
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Link
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {contracts.map((contract, idx) => <tr key={idx+1} className="bg-white border-b">
-                  <td className="px-6 py-4">{contract.id}</td>
-                  <td className="px-6 py-4">{contract.client.userId == user.uid ? 'Client' : 'Freelancer'}</td>
-                  <td className="px-6 py-4">{contract.status}</td>
-                  <td className="px-6 py-4">
-                    <Button variant="link" asChild>
-                      <a href={"/work?id=" + String(contract.id)}>View Contract</a>
-                    </Button>
-                  </td>
-                </tr>)}
-                
+                {contracts.map((contract, idx) => (
+                  <tr key={idx + 1} className="bg-white border-b">
+                    <td className="px-6 py-4">{contract.id}</td>
+                    <td className="px-6 py-4">
+                      {contract.client.userId == user.uid
+                        ? "Client"
+                        : "Freelancer"}
+                    </td>
+                    <td className="px-6 py-4">{contract.status}</td>
+                    <td className="px-6 py-4">
+                      <Button
+                        variant="link"
+                        asChild
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <a href={"/work?id=" + String(contract.id)}>
+                          View Contract
+                        </a>
+                      </Button>
+                    </td>
+                    <td>
+                      {contract.freelancer?.userId == user.uid &&
+                        !contract?.isWorkDone &&
+                        contract.status == "started" && (
+                          <Button>Turn in Work</Button>
+                        )}
+                      {contract.client?.userId == user.uid &&
+                        contract?.isWorkDone && <Button>Pay for Work</Button>}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
