@@ -1,0 +1,29 @@
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import LoginPage from "./pages/login";
+import LandingPage from "./pages";
+import SignupPage from "./pages/signup";
+import DashboardPage from "./pages/dashboard";
+import ResetPasswordPage from "./pages/reset-password";
+import { AuthProvider } from "./lib/auth-context";
+
+function App() {
+  return (
+    <>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" index element={<LandingPage />} />
+            <Route path="/signin" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+      <Toaster />
+    </>
+  );
+}
+
+export default App;
