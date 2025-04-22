@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -17,6 +17,9 @@ export default function LoginPage() {
   const { toast } = useToast()
   const { signIn, signInWithGoogle, signInWithGithub } = useAuth()
   const router = useNavigate()
+  const [searchParams, _] = useSearchParams()
+  const redirect = searchParams.get("redirect") || "/dashboard"
+
 
   const handleSignIn = async (e) => {
     e.preventDefault()
@@ -28,7 +31,7 @@ export default function LoginPage() {
         title: "Success",
         description: "You have successfully signed in",
       })
-      router("/dashboard")
+      router(redirect)
     } catch (error) {
       toast({
         variant: "destructive",
@@ -43,7 +46,7 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
       await signInWithGoogle()
-      router("/dashboard")
+      router(redirect)
     } catch (error) {
       toast({
         variant: "destructive",
@@ -56,7 +59,7 @@ export default function LoginPage() {
   const handleGithubSignIn = async () => {
     try {
       await signInWithGithub()
-      router("/dashboard")
+      router(redirect)
     } catch (error) {
       toast({
         variant: "destructive",
