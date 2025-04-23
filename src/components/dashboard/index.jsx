@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
@@ -23,6 +24,9 @@ import { useNavigate } from "react-router-dom";
 import { getAllContracts } from "../../lib/firestore";
 import { ConnectButton, useWallet } from "@suiet/wallet-kit";
 import "@suiet/wallet-kit/style.css";
+import DeleteContractAction from "./actions/DeleteContract";
+import TurnInWorkAction from "./actions/freelancer/TurnInWork";
+import PayForWorkAction from "./actions/client/PayForWork";
 
 export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
@@ -34,7 +38,7 @@ export default function Dashboard() {
   const [contracts, setContracts] = useState([]);
   const wallet = useWallet();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [forceRender, setForceRender] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -55,15 +59,13 @@ export default function Dashboard() {
           description:
             "Failed to load contracts. It may not exist or you don't have access.",
         });
-      } finally {
-        setIsLoading(false);
       }
     };
 
     if (user) {
       fetchAllContracts();
     }
-  }, [user, loading, router, toast]);
+  }, [user, loading, router, toast, forceRender]);
 
   const handleCreateContract = async (role) => {
     if (!user) return;
@@ -72,6 +74,7 @@ export default function Dashboard() {
     try {
       const id = await createContract(user.uid, role, wallet.address);
       setContractId(id);
+      setForceRender((i) => i + 1);
       toast({
         title: "Contract Created",
         description: `Your ${role} contract has been created successfully.`,
@@ -179,9 +182,16 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <>
-                    <ConnectButton label="Connect Wallet to Continue" />
+                    {!wallet.connected && (
+                      <ConnectButton
+                        label="Connect Wallet to Continue"
+                        className="!w-full"
+                      />
+                    )}
                     <div className="grid grid-cols-2 gap-4 relative">
-                      {!wallet.connected && <div className="absolute inset-0 bg-white opacity-50 cursor-not-allowed"></div>}
+                      {!wallet.connected && (
+                        <div className="absolute inset-0 bg-white opacity-50 cursor-not-allowed"></div>
+                      )}
                       <Card
                         className="cursor-pointer transition-all hover:shadow-md"
                         onClick={() => handleCreateContract("client")}
@@ -274,11 +284,26 @@ export default function Dashboard() {
                     <td>
                       {contract.freelancer?.userId == user.uid &&
                         !contract?.isWorkDone &&
-                        contract.status == "started" && (
-                          <Button>Turn in Work</Button>
+                        contract.status == "active" && (
+                          <TurnInWorkAction
+                            contract={contract}
+                            setForceRender={setForceRender}
+                          />
                         )}
                       {contract.client?.userId == user.uid &&
-                        contract?.isWorkDone && <Button>Pay for Work</Button>}
+                        contract?.isWorkDone && (
+                          <PayForWorkAction
+                            contractId={contract.id}
+                            setForceRender={setForceRender}
+                          />
+                        )}
+                      {contract.createdBy == user.uid &&
+                        contract.status === "pending" && (
+                          <DeleteContractAction
+                            contractId={contract.id}
+                            setForceRender={setForceRender}
+                          />
+                        )}
                     </td>
                   </tr>
                 ))}

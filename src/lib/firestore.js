@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -166,6 +167,17 @@ export async function updateContract(contractId, terms) {
     return contractId;
   } catch (error) {
     console.error("Error updating contract:", error);
+    throw error;
+  }
+}
+
+
+export async function deleteContract(contractId) {
+  try {
+    const contractRef = doc(db, "contracts", contractId);
+    await deleteDoc(contractRef);
+  } catch (error) {
+    console.error("Error deleting contract:", error);
     throw error;
   }
 }
