@@ -23,10 +23,10 @@ import { createContract } from "@/lib/firestore";
 import { useNavigate } from "react-router-dom";
 import { getAllContracts } from "../../lib/firestore";
 import { ConnectButton, useWallet } from "@suiet/wallet-kit";
-import "@suiet/wallet-kit/style.css";
 import DeleteContractAction from "./actions/DeleteContract";
 import TurnInWorkAction from "./actions/freelancer/TurnInWork";
 import PayForWorkAction from "./actions/client/PayForWork";
+import "@suiet/wallet-kit/style.css";
 
 export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
@@ -39,6 +39,8 @@ export default function Dashboard() {
   const wallet = useWallet();
 
   const [forceRender, setForceRender] = useState(0);
+  
+  
 
   useEffect(() => {
     if (!loading && !user) {
@@ -144,7 +146,7 @@ export default function Dashboard() {
               Sign Out
             </Button>
 
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog onOpenChange={v => !v && setContractId("")}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
