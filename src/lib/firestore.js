@@ -181,3 +181,33 @@ export async function deleteContract(contractId) {
     throw error;
   }
 }
+
+export async function turnInContractWork(contractId, objectId) {
+  try {
+    const contractRef = doc(db, "contracts", contractId);
+    const contractSnap = await getDoc(contractRef);
+
+    if (!contractSnap.exists()) {
+      throw new Error("Contract not found");
+    }
+
+    const contractData = contractSnap.data();
+
+    // Update the contract with the new terms
+    await setDoc(
+      contractRef,
+      {
+        ...contractData,
+        status: "Reviewing",
+        isWorkDone: true,
+        workObjectId: objectId
+      },
+      { merge: true },
+    );
+
+    return contractId;
+  } catch (error) {
+    console.error("Error turning in contract work:", error);
+    throw error;
+  }
+}

@@ -7,7 +7,7 @@ import DashboardPage from "./pages/dashboard";
 import ResetPasswordPage from "./pages/reset-password";
 import { AuthProvider } from "./lib/auth-context";
 import WorkPage from "./pages/work";
-import { WalletProvider, DefaultChains } from "@suiet/wallet-kit";
+import { WalletProvider, DefaultChains, SuiTestnetChain } from "@suiet/wallet-kit";
 import DashboardLayout from "./components/dashboard/layout";
 
 
@@ -15,7 +15,7 @@ function App() {
   return (
     <>
       <AuthProvider>
-        <WalletProvider chains={DefaultChains}>
+        <WalletProvider chains={[SuiTestnetChain]}>
           <BrowserRouter>
             <Routes>
               <Route path="/" index element={<LandingPage />} />
