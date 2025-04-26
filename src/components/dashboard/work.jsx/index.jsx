@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { FileText, Badge, User, Briefcase, FileEdit, FileWarning } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -20,6 +21,31 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import { getContract, joinContract, updateContract } from "@/lib/firestore";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Animation configurations
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: { opacity: 1, x: 0 },
+};
+
+const gradientVariants = {
+  initial: { backgroundPosition: "0% 50%" },
+  animate: {
+    backgroundPosition: "100% 50%",
+    transition: { duration: 4, repeat: Infinity, repeatType: "reverse" },
+  },
+};
+
+const hoverVariants = {
+  hover: { scale: 1.02, transition: { duration: 0.2 } },
+  tap: { scale: 0.98 },
+};
 
 export default function WorkContract() {
   const [searchParams, _] = useSearchParams();
@@ -81,7 +107,6 @@ export default function WorkContract() {
         title: "Contract Joined",
         description: `You have successfully joined as a ${role}.`,
       });
-      // Refresh contract data
       const updatedContract = await getContract(contractId);
       setContract(updatedContract);
     } catch (error) {
@@ -121,29 +146,47 @@ export default function WorkContract() {
 
   if (loading || isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+        <div className="flex items-center text-slate-400">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+          <span className="ml-3">Loading contract...</span>
+        </div>
       </div>
     );
   }
 
   if (!contract) {
     return (
-      <div className="container mx-auto flex min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Contract Not Found</CardTitle>
-            <CardDescription>
-              The contract you're looking for doesn't exist or you don't have
-              access to it.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => router("/dashboard")}>
-              Back to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-md"
+        >
+          <Card className="bg-slate-900 border-slate-800 relative overflow-hidden">
+            <div className="absolute inset-0  animate-pulse" />
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <FileWarning className="mr-2 h-5 w-5 text-blue-400 animate-pulse" />
+                Contract Not Found
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                The contract doesn't exist or you don't have access.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={() => router("/dashboard")}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white w-full"
+                >
+                  Back to Dashboard
+                </Button>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   }
@@ -152,8 +195,8 @@ export default function WorkContract() {
     contract.client?.userId === user?.uid
       ? "client"
       : contract.freelancer?.userId === user?.uid
-        ? "freelancer"
-        : null;
+      ? "freelancer"
+      : null;
 
   const canJoin =
     !userRole &&
@@ -164,147 +207,337 @@ export default function WorkContract() {
     contract.client?.joined && !contract.freelancer?.joined
       ? "freelancer"
       : !contract.client?.joined && contract.freelancer?.joined
-        ? "client"
-        : null;
-  const isContractActive = contract.status === "active" && contract.client?.joined && contract.freelancer?.joined;
-  const isWorkComplete = isContractActive && contract.isWorkDone
+      ? "client"
+      : null;
 
   return (
-    <>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       <div className="container mx-auto p-4">
-        <Card className="mx-auto max-w-4xl">
-          <CardHeader>
-            <CardTitle>Work Contract</CardTitle>
-            <CardDescription>
-              {contract.status === "pending"
-                ? "This contract is waiting for all parties to join"
-                : contract.status === "active"
-                  ? "This contract is active"
-                  : contract.status === "completed"
-                    ? "This contract has been completed"
-                    : "This contract has been cancelled"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-lg bg-muted p-4">
-              <h3 className="mb-2 font-medium">Contract Details</h3>
-              <p>
-                <strong>Contract ID:</strong> {contractId}
-              </p>
-              <p>
-                <strong>Created:</strong>{" "}
-                {contract.createdAt?.toDate().toLocaleString()}
-              </p>
-              <p>
-                <strong>Status:</strong> {contract.status}
-              </p>
-            </div>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+          className="mx-auto max-w-4xl"
+        >
+          <Card className="bg-slate-900 border-slate-800 relative group">
+            <motion.div
+              className="absolute -inset-1 bg-gradient-to-r from-blue-600/30 to-purple-600/30 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-1000"
+              variants={gradientVariants}
+              initial="initial"
+              animate="animate"
+            />
+            <CardHeader className="border-b border-slate-800 pb-4">
+              <motion.div
+                className="flex items-center justify-between"
+                variants={itemVariants}
+              >
+                <div>
+                  <CardTitle className="text-white flex items-center">
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <FileText className="mr-2 h-5 w-5 text-blue-400" />
+                    </motion.div>
+                    Work Contract
+                  </CardTitle>
+                  <CardDescription className="text-slate-400">
+                    {contract.status === "pending"
+                      ? "⏳ Waiting for all parties to join"
+                      : contract.status === "active"
+                      ? "🚀 Active contract"
+                      : contract.status === "completed"
+                      ? "🎉 Successfully completed"
+                      : "❌ Cancelled contract"}
+                  </CardDescription>
+                </div>
+                <motion.div whileHover={{ scale: 1.05 }}>
+                  <Badge
+                    variant="outline"
+                    className={`text-sm font-semibold transition-colors ${
+                      contract.status === "active"
+                        ? "bg-emerald-950/50 text-emerald-400 border-emerald-800 hover:bg-emerald-900"
+                        : contract.status === "pending"
+                        ? "bg-amber-950/50 text-amber-400 border-amber-800 hover:bg-amber-900 animate-pulse"
+                        : "bg-slate-800/50 text-slate-400 border-slate-700"
+                    }`}
+                  >
+                    {contract.status}
+                  </Badge>
+                </motion.div>
+              </motion.div>
+            </CardHeader>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-lg border p-4">
-                <h3 className="mb-2 font-medium">Client</h3>
-                {contract.client?.joined ? (
-                  <p>
-                    {contract.client.userId === user?.uid
-                      ? "You"
-                      : `${contract.client.userId} has joined as client`}
+            <CardContent className="pt-6 space-y-6">
+              <motion.div
+                variants={itemVariants}
+                className="rounded-lg bg-slate-800 p-4 border border-slate-700 backdrop-blur-sm"
+                whileHover={{ y: -2 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h3 className="mb-3 font-medium text-white flex items-center">
+                  <motion.span
+                    className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                    animate={{ backgroundPosition: ["0% 50%", "100% 50%"] }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                    }}
+                    style={{
+                      backgroundSize: "200% 200%",
+                    }}
+                  >
+                    Contract Details
+                  </motion.span>
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <p className="text-slate-300">
+                    <span className="text-slate-400">ID:</span> {contractId}
                   </p>
-                ) : (
-                  <p>Waiting for client to join...</p>
-                )}
-              </div>
-
-              <div className="rounded-lg border p-4">
-                <h3 className="mb-2 font-medium">Freelancer</h3>
-                {contract.freelancer?.joined ? (
-                  <p>
-                    {contract.freelancer.userId === user?.uid
-                      ? "You"
-                      : `${contract.freelancer.userId} has joined as freelancer`}
+                  <p className="text-slate-300">
+                    <span className="text-slate-400">Created:</span>{" "}
+                    {contract.createdAt?.toDate().toLocaleString()}
                   </p>
-                ) : (
-                  <p>Waiting for freelancer to join...</p>
-                )}
-              </div>
-            </div>
+                </div>
+              </motion.div>
 
-            {canJoin && availableRole && (
-              <div className="rounded-lg border bg-muted p-4 text-center">
-                <h3 className="mb-2 font-medium">Join this Contract</h3>
-                <p className="mb-4">
-                  You can join this contract as a {availableRole}.
-                </p>
-                <Button
-                  onClick={() => handleJoinContract(availableRole)}
-                  disabled={isJoining}
+              <motion.div
+                variants={itemVariants}
+                className="grid gap-4 md:grid-cols-2"
+              >
+                <motion.div
+                  className="rounded-lg bg-slate-800 p-4 border border-slate-700 hover:border-blue-500 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  {isJoining ? "Joining..." : `Join as ${availableRole}`}
-                </Button>
-              </div>
-            )}
+                  <h3 className="mb-3 font-medium text-white flex items-center">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <User className="mr-2 h-4 w-4 text-blue-400" />
+                    </motion.div>
+                    Client
+                  </h3>
+                  {contract.client?.joined ? (
+                    <p className="text-slate-300">
+                      {contract.client.userId === user?.uid ? (
+                        <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                          You (Client)
+                        </span>
+                      ) : (
+                        `${contract.client.userId.slice(0, 6)}... joined`
+                      )}
+                    </p>
+                  ) : (
+                    <div className="flex items-center space-x-2 text-slate-400">
+                      <div className="h-2 w-2 bg-amber-400 rounded-full animate-pulse" />
+                      <span>Waiting for client...</span>
+                    </div>
+                  )}
+                </motion.div>
 
-            {userRole && (
-              <div className="rounded-lg border bg-muted p-4 text-center">
-                <h3 className="mb-2 font-medium">Your Role</h3>
-                <p>You are participating in this contract as a {userRole}.</p>
-              </div>
-            )}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <Button onClick={() => router("/dashboard")} variant="outline">
-                Back to Dashboard
-              </Button>
+                <motion.div
+                  className="rounded-lg bg-slate-800 p-4 border border-slate-700 hover:border-purple-500 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <h3 className="mb-3 font-medium text-white flex items-center">
+                    <motion.div
+                      animate={{ rotate: [0, 20, -20, 0] }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                    >
+                      <Briefcase className="mr-2 h-4 w-4 text-purple-400" />
+                    </motion.div>
+                    Freelancer
+                  </h3>
+                  {contract.freelancer?.joined ? (
+                    <p className="text-slate-300">
+                      {contract.freelancer.userId === user?.uid ? (
+                        <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                          You (Freelancer)
+                        </span>
+                      ) : (
+                        `${contract.freelancer.userId.slice(0, 6)}... joined`
+                      )}
+                    </p>
+                  ) : (
+                    <div className="flex items-center space-x-2 text-slate-400">
+                      <div className="h-2 w-2 bg-amber-400 rounded-full animate-pulse" />
+                      <span>Waiting for freelancer...</span>
+                    </div>
+                  )}
+                </motion.div>
+              </motion.div>
 
-              {contract.freelancer?.joined && contract.client?.joined && <Button onClick={() => setShowTermsDialog(true)}>
-                Propose Terms
-              </Button>}
-            </div>
-          </CardContent>
-        </Card>
+              {canJoin && availableRole && (
+                <motion.div
+                  variants={itemVariants}
+                  className="rounded-lg bg-slate-800 p-4 border border-slate-700 backdrop-blur-sm"
+                  whileHover={{ scale: 1.01 }}
+                >
+                  <h3 className="mb-3 font-medium text-white">Join Contract</h3>
+                  <p className="mb-4 text-slate-400">
+                    Available role:{" "}
+                    <span className="font-semibold text-blue-400">
+                      {availableRole}
+                    </span>
+                  </p>
+                  <motion.div
+                    whileHover="hover"
+                    whileTap="tap"
+                    variants={hoverVariants}
+                  >
+                    <Button
+                      onClick={() => handleJoinContract(availableRole)}
+                      disabled={isJoining}
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                    >
+                      {isJoining ? (
+                        <div className="flex items-center">
+                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          Joining...
+                        </div>
+                      ) : (
+                        `Join as ${availableRole}`
+                      )}
+                    </Button>
+                  </motion.div>
+                </motion.div>
+              )}
+
+              {userRole && (
+                <motion.div
+                  variants={itemVariants}
+                  className="rounded-lg bg-slate-800 p-4 border border-slate-700 backdrop-blur-sm"
+                  whileHover={{ y: -2 }}
+                >
+                  <h3 className="mb-2 font-medium text-white">Your Role</h3>
+                  <div className="flex items-center gap-2">
+                    <motion.div whileHover={{ scale: 1.05 }}>
+                      <Badge
+                        variant="outline"
+                        className={`text-sm font-semibold transition-colors ${
+                          userRole === "client"
+                            ? "bg-blue-950/50 text-blue-400 border-blue-800 hover:bg-blue-900"
+                            : "bg-purple-950/50 text-purple-400 border-purple-800 hover:bg-purple-900"
+                        }`}
+                      >
+                        {userRole}
+                      </Badge>
+                    </motion.div>
+                    <p className="text-slate-300">
+                      Participating in this contract
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              <motion.div
+                variants={itemVariants}
+                className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <motion.div whileHover={{ x: -5 }}>
+                  <Button
+                    onClick={() => router("/dashboard")}
+                    variant="ghost"
+                    className="text-slate-300 hover:text-white hover:bg-slate-800"
+                  >
+                    ← Back to Dashboard
+                  </Button>
+                </motion.div>
+
+                {contract.freelancer?.joined && contract.client?.joined && (
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button
+                      onClick={() => setShowTermsDialog(true)}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                    >
+                      Propose Terms ✍️
+                    </Button>
+                  </motion.div>
+                )}
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Propose Contract Terms</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={terms.title}
-                onChange={(e) => setTerms({ ...terms, title: e.target.value })}
-              />
+        <DialogContent className="bg-slate-900 border-slate-800 text-white">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          >
+            <DialogHeader>
+              <DialogTitle className="text-white flex items-center">
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <FileEdit className="mr-2 h-5 w-5 text-blue-400" />
+                </motion.div>
+                Propose Contract Terms
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {["Title", "Due Date", "Price (USD)"].map((label, index) => (
+                <motion.div
+                  key={label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="space-y-2"
+                >
+                  <Label className="text-slate-300">{label}</Label>
+                  <Input
+                    type={
+                      label === "Due Date"
+                        ? "date"
+                        : label === "Price (USD)"
+                        ? "number"
+                        : "text"
+                    }
+                    className="bg-slate-800 border-slate-700 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    value={terms[label.toLowerCase().replace(/[()]/g, "")]}
+                    onChange={(e) =>
+                      setTerms({
+                        ...terms,
+                        [label.toLowerCase().replace(/[()]/g, "")]:
+                          e.target.value,
+                      })
+                    }
+                  />
+                </motion.div>
+              ))}
             </div>
-            <div>
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={terms.dueDate}
-                onChange={(e) =>
-                  setTerms({ ...terms, dueDate: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="rate">Price (USD)</Label>
-              <Input
-                id="rate"
-                type="number"
-                value={terms.rate}
-                onChange={(e) => setTerms({ ...terms, rate: e.target.value })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTermsDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSubmitTerms}>Submit Terms</Button>
-          </DialogFooter>
+            <DialogFooter className="mt-4">
+              <motion.div whileHover={{ x: -5 }}>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowTermsDialog(false)}
+                  className="text-slate-300 hover:text-white hover:bg-slate-800"
+                >
+                  Cancel
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={handleSubmitTerms}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                >
+                  Submit Terms 🚀
+                </Button>
+              </motion.div>
+            </DialogFooter>
+          </motion.div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
