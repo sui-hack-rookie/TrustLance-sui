@@ -7,7 +7,7 @@ export default function Navbar() {
       <div className="flex items-center space-x-8">
         <h1 className="text-3xl font-extrabold text-primary">Dashboard</h1>
 
-        <nav className="flex items-center justify-evenly space-x-6 w-[1000px]">
+        <nav className="flex items-center justify-evenly space-x-6">
           <Link
             to="/dashboard"
             className="text-base font-medium text-muted-foreground hover:text-primary transition-colors"

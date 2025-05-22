@@ -28,6 +28,7 @@ import DeleteContractAction from "./actions/DeleteContract";
 import TurnInWorkAction from "./actions/freelancer/TurnInWork";
 import PayForWorkAction from "./actions/client/PayForWork";
 import "@suiet/wallet-kit/style.css";
+import ViewDataAction from "./actions/client/viewData";
 
 export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
@@ -305,28 +306,27 @@ export default function Dashboard() {
                       >
                         <td className="px-6 py-4 text-slate-300">{contract.id}</td>
                         <td className="px-6 py-4">
-                          <Badge
+                          <div
                             variant="outline"
-                            className={`${contract.client.userId == user.uid ? "bg-blue-950 text-blue-400 border-blue-800" : "bg-purple-950 text-purple-400 border-purple-800"}`}
+                            className={`${contract.client.userId == user.uid ? "text-blue-400 border-blue-800" : "text-purple-400 border-purple-800"}`}
                           >
                             {contract.client.userId == user.uid ? "Client" : "Freelancer"}
-                          </Badge>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
-                          <Badge
-                            variant="outline"
+                          <div
                             className={`
                             ${
                               contract.status === "active"
-                                ? "bg-emerald-950 text-emerald-400 border-emerald-800"
+                                ? "text-emerald-400 border-emerald-800"
                                 : contract.status === "pending"
-                                  ? "bg-amber-950 text-amber-400 border-amber-800"
-                                  : "bg-slate-800 text-slate-400 border-slate-700"
+                                  ? "text-amber-400 border-amber-800"
+                                  : "text-slate-400 border-slate-700"
                             }
                           `}
                           >
                             {contract.status}
-                          </Badge>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <Button
@@ -350,6 +350,9 @@ export default function Dashboard() {
                           )}
                           {contract.createdBy == user.uid && contract.status === "pending" && (
                             <DeleteContractAction contractId={contract.id} setForceRender={setForceRender} />
+                          )}
+                          {contract.client?.userId == user.uid && contract?.isWorkDone && contract.status === "completed" && (
+                            <ViewDataAction contractId={contract.id} setForceRender={setForceRender} />
                           )}
                         </td>
                       </tr>

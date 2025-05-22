@@ -25,15 +25,18 @@ import { Transaction, TransactionDataBuilder } from "@mysten/sui/transactions";
 import { fromHex, toHex } from "@mysten/sui/utils";
 import { useSuiClient, useWallet } from "@suiet/wallet-kit";
 import { turnInContractWork } from "../../../../lib/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TurnInWorkAction({ contract, setForceRender }) {
   const [workDetails, setWorkDetails] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const wallet = useWallet();
   const suiClient = useSuiClient();
+  const { toast } = useToast();
 
   const handleWorkSubmit = async (event) => {
     event.preventDefault();
+    // STEP 1: Create a object id containing encrypted work data of freelancer, protected by seal
     const package_id = import.meta.env.VITE_PUBLIC_PACKAGE_ID || "";
     const creator = wallet.address;
     const nonceHex =
@@ -73,7 +76,7 @@ export default function TurnInWorkAction({ contract, setForceRender }) {
     const signedTx = await wallet.signTransaction({
       transaction: tx,
     });
-
+    
     const txData = await suiClient.executeTransactionBlock({
       transactionBlock: signedTx.bytes,
       signature: [signedTx.signature],
@@ -89,11 +92,29 @@ export default function TurnInWorkAction({ contract, setForceRender }) {
       console.error("Failed to create object");
       return;
     }
-    
-    await turnInContractWork(contract.id, objectId)
-    
+    console.log("objectId: ", objectId);
+    // STEP 2: build a transaction to move ownership of object from freelancer to client
+    const txn = new Transaction();
+    txn.transferObjects(
+        [txn.object(objectId)],
+        txn.pure.address(contract.client.walletAddr)
+    );
+    const signedTxn = await wallet.signTransaction({
+      transaction: txn,
+    });
+    // await suiClient.executeTransactionBlock({
+    //   transactionBlock: signedTxn.bytes,
+    //   signature: [signedTxn.signature]
+    // });
+    await turnInContractWork(contract.id, objectId, {
+      transactionBlock: signedTxn.bytes,
+      signature: [signedTxn.signature]
+    })
+    toast({
+      title: "Waiting on Client for review.",
+      description: "Dont worry we have not yet shared your work. The work will be passed on to the client when they pay for it.",
+    });
     setIsOpen(false);
-
     setForceRender(true);
   };
 

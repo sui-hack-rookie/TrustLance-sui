@@ -221,7 +221,7 @@ export default function WorkContract() {
         >
           <Card className="bg-slate-900 border-slate-800 relative group">
             <motion.div
-              className="absolute -inset-1 bg-gradient-to-r from-blue-600/30 to-purple-600/30 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-1000"
+              className="absolute -inset-1 bg-gradient-to-r from-blue-600/30 to-purple-600/30 rounded-lg blur opacity-30 group-hover:opacity-50 transition duration-1000 pointer-events-none"
               variants={gradientVariants}
               initial="initial"
               animate="animate"
@@ -486,7 +486,11 @@ export default function WorkContract() {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              {["Title", "Due Date", "Price (USD)"].map((label, index) => (
+              {[
+                { label: "Title", name: "title" },
+                { label: "Due Date", name: "dueDate" },
+                { label: "Price (USD)", name: "rate" }
+              ].map(({ label, name }, index) => (
                 <motion.div
                   key={label}
                   initial={{ opacity: 0, y: 10 }}
@@ -508,7 +512,7 @@ export default function WorkContract() {
                     onChange={(e) =>
                       setTerms({
                         ...terms,
-                        [label.toLowerCase().replace(/[()]/g, "")]:
+                        [name]:
                           e.target.value,
                       })
                     }

@@ -164,7 +164,6 @@ export async function updateContract(contractId, terms) {
       { merge: true },
     );
 
-    return contractId;
   } catch (error) {
     console.error("Error updating contract:", error);
     throw error;
@@ -182,7 +181,7 @@ export async function deleteContract(contractId) {
   }
 }
 
-export async function turnInContractWork(contractId, objectId) {
+export async function turnInContractWork(contractId, objectId, txn) {
   try {
     const contractRef = doc(db, "contracts", contractId);
     const contractSnap = await getDoc(contractRef);
@@ -193,21 +192,48 @@ export async function turnInContractWork(contractId, objectId) {
 
     const contractData = contractSnap.data();
 
-    // Update the contract with the new terms
+    // Update the contract
     await setDoc(
       contractRef,
       {
         ...contractData,
         status: "Reviewing",
         isWorkDone: true,
-        workObjectId: objectId
+        workObjectId: objectId,
+        freelancer: {txn}
       },
       { merge: true },
     );
 
-    return contractId;
   } catch (error) {
     console.error("Error turning in contract work:", error);
+    throw error;
+  }
+}
+
+export async function endContract(contractId) {
+  try {
+    const contractRef = doc(db, "contracts", contractId);
+    const contractSnap = await getDoc(contractRef);
+
+    if (!contractSnap.exists()) {
+      throw new Error("Contract not found");
+    }
+
+    const contractData = contractSnap.data();
+
+    // Update the contract
+    await setDoc(
+      contractRef,
+      {
+        ...contractData,
+        status: "Completed",
+        isWorkDone: true,
+      },
+      { merge: true },
+    );
+  } catch (error) {
+    console.error("Error setting contract to completed state:", error);
     throw error;
   }
 }
