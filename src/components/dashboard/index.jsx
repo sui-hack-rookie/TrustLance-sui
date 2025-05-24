@@ -29,6 +29,7 @@ import TurnInWorkAction from "./actions/freelancer/TurnInWork";
 import PayForWorkAction from "./actions/client/PayForWork";
 import "@suiet/wallet-kit/style.css";
 import ViewDataAction from "./actions/client/viewData";
+import ViewObjectAction from "./actions/freelancer/ViewObject";
 
 export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
@@ -339,20 +340,23 @@ export default function Dashboard() {
                             </a>
                           </Button>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 flex gap-2">
                           {contract.freelancer?.userId == user.uid &&
                             !contract?.isWorkDone &&
                             contract.status == "active" && (
                               <TurnInWorkAction contract={contract} setForceRender={setForceRender} />
                             )}
-                          {contract.client?.userId == user.uid && contract?.isWorkDone && (
-                            <PayForWorkAction contractId={contract.id} setForceRender={setForceRender} />
+                          {contract.client?.userId == user.uid && contract?.isWorkDone && contract.status === "reviewing" && (
+                            <PayForWorkAction contract={contract} setForceRender={setForceRender} />
                           )}
-                          {contract.createdBy == user.uid && contract.status === "pending" && (
-                            <DeleteContractAction contractId={contract.id} setForceRender={setForceRender} />
+                          {contract.freelancer?.userId == user.uid && contract?.isWorkDone && contract.status === "reviewing" && (
+                            <ViewObjectAction contract={contract} setForceRender={setForceRender} />
                           )}
                           {contract.client?.userId == user.uid && contract?.isWorkDone && contract.status === "completed" && (
                             <ViewDataAction contractId={contract.id} setForceRender={setForceRender} />
+                          )}
+                          {contract.createdBy == user.uid && (
+                            <DeleteContractAction contractId={contract.id} setForceRender={setForceRender} />
                           )}
                         </td>
                       </tr>

@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
+import { ConnectButton, useWallet } from "@suiet/wallet-kit";
 import { getContract, joinContract, updateContract } from "@/lib/firestore";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -52,6 +53,7 @@ export default function WorkContract() {
   const router = useNavigate();
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const wallet = useWallet();
   const [contract, setContract] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
@@ -102,7 +104,7 @@ export default function WorkContract() {
 
     setIsJoining(true);
     try {
-      await joinContract(contractId, user.uid, role);
+      await joinContract(contractId, user.uid, role, wallet.address);
       toast({
         title: "Contract Joined",
         description: `You have successfully joined as a ${role}.`,
@@ -242,13 +244,7 @@ export default function WorkContract() {
                     Work Contract
                   </CardTitle>
                   <CardDescription className="text-slate-400">
-                    {contract.status === "pending"
-                      ? "⏳ Waiting for all parties to join"
-                      : contract.status === "active"
-                      ? "🚀 Active contract"
-                      : contract.status === "completed"
-                      ? "🎉 Successfully completed"
-                      : "❌ Cancelled contract"}
+                    {contract.status}
                   </CardDescription>
                 </div>
                 <motion.div whileHover={{ scale: 1.05 }}>
@@ -384,6 +380,11 @@ export default function WorkContract() {
                       {availableRole}
                     </span>
                   </p>
+                  {!wallet.connected && (
+                    <span className="w-full mb-4 text-white">
+                      (Connect Wallet to Continue)
+                    </span>
+                  )}
                   <motion.div
                     whileHover="hover"
                     whileTap="tap"
@@ -391,7 +392,7 @@ export default function WorkContract() {
                   >
                     <Button
                       onClick={() => handleJoinContract(availableRole)}
-                      disabled={isJoining}
+                      disabled={isJoining || !wallet.connected}
                       className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                     >
                       {isJoining ? (
@@ -455,6 +456,7 @@ export default function WorkContract() {
                   >
                     <Button
                       onClick={() => setShowTermsDialog(true)}
+                      disabled={contract.status !== "pending"}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                     >
                       Propose Terms ✍️

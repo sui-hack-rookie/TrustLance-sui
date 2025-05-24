@@ -76,7 +76,7 @@ export async function getContract(contractId) {
 }
 
 // Join a contract as the partner
-export async function joinContract(contractId, userId, role) {
+export async function joinContract(contractId, userId, role, walletAddr) {
   try {
     const contractRef = doc(db, "contracts", contractId);
     const contractSnap = await getDoc(contractRef);
@@ -100,6 +100,7 @@ export async function joinContract(contractId, userId, role) {
         [role]: {
           userId,
           joined: true,
+          walletAddr
         },
         status:
           contractData.client?.joined && contractData.freelancer?.joined
@@ -181,7 +182,7 @@ export async function deleteContract(contractId) {
   }
 }
 
-export async function turnInContractWork(contractId, objectId, txn) {
+export async function turnInContractWork(contractId, objectId, workObjectKeyId, txn) {
   try {
     const contractRef = doc(db, "contracts", contractId);
     const contractSnap = await getDoc(contractRef);
@@ -197,9 +198,10 @@ export async function turnInContractWork(contractId, objectId, txn) {
       contractRef,
       {
         ...contractData,
-        status: "Reviewing",
+        status: "reviewing",
         isWorkDone: true,
         workObjectId: objectId,
+        workObjectKeyId,
         freelancer: {txn}
       },
       { merge: true },
@@ -227,8 +229,7 @@ export async function endContract(contractId) {
       contractRef,
       {
         ...contractData,
-        status: "Completed",
-        isWorkDone: true,
+        status: "completed",
       },
       { merge: true },
     );

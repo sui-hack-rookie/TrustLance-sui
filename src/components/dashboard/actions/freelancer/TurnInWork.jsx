@@ -67,7 +67,7 @@ export default function TurnInWorkAction({ contract, setForceRender }) {
     tx.moveCall({
       target: `${package_id}::private_data::store_entry`,
       arguments: [
-        tx.pure.vector("u8", fromHex(keyId)),
+        tx.pure.vector("u8", fromHex(nonceHex)),
         tx.pure.vector("u8", encrypted.encryptedObject),
 
         // other arguments
@@ -106,7 +106,7 @@ export default function TurnInWorkAction({ contract, setForceRender }) {
     //   transactionBlock: signedTxn.bytes,
     //   signature: [signedTxn.signature]
     // });
-    await turnInContractWork(contract.id, objectId, {
+    await turnInContractWork(contract.id, objectId, keyId, {
       transactionBlock: signedTxn.bytes,
       signature: [signedTxn.signature]
     })
@@ -115,7 +115,7 @@ export default function TurnInWorkAction({ contract, setForceRender }) {
       description: "Dont worry we have not yet shared your work. The work will be passed on to the client when they pay for it.",
     });
     setIsOpen(false);
-    setForceRender(true);
+    setForceRender(prev => !prev);
   };
 
   return (
