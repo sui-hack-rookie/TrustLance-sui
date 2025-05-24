@@ -1,8 +1,5 @@
 {
-  "assets": {
-    "directory": "./dist",
-    "not_found_handling": "single-page-application"
-  },
   "name": "trustlance",
-  "compatibility_date":"2025-05-24"
+  "compatibility_date":"2025-05-24",
+  "pages_build_output_dir": "dist"
 }
