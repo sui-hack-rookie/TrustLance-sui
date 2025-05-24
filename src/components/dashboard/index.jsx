@@ -28,7 +28,7 @@ import DeleteContractAction from "./actions/DeleteContract";
 import TurnInWorkAction from "./actions/freelancer/TurnInWork";
 import PayForWorkAction from "./actions/client/PayForWork";
 import "@suiet/wallet-kit/style.css";
-import ViewDataAction from "./actions/client/viewData";
+import ViewDataAction from "./actions/client/ViewData";
 import ViewObjectAction from "./actions/freelancer/ViewObject";
 
 export default function Dashboard() {
