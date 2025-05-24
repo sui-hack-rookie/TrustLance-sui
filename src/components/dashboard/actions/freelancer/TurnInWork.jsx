@@ -106,7 +106,7 @@ export default function TurnInWorkAction({ contract, setForceRender }) {
     //   transactionBlock: signedTxn.bytes,
     //   signature: [signedTxn.signature]
     // });
-    await turnInContractWork(contract.id, objectId, keyId, {
+    await turnInContractWork(contract.id, objectId, keyId, workDetails, {
       transactionBlock: signedTxn.bytes,
       signature: [signedTxn.signature]
     })

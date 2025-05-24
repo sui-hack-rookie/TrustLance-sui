@@ -18,12 +18,13 @@ import { SquareArrowUpLeft } from "lucide-react";
 import { Transaction } from "@mysten/sui/transactions";
 import { fromHex, toHex } from "@mysten/sui/utils";
 import { getAllowlistedKeyServers, SealClient, SessionKey } from "@mysten/seal";
+import { SuiClient } from '@mysten/sui/client';
 
 export default function ViewDataAction({ contractId, setForceRender }) {
   const [contract, setContract] = useState();
   const [decoded, setDecoded] = useState("");
   const wallet = useWallet();
-  const suiClient = useSuiClient();
+  // const suiClient = useSuiClient();
 
   useEffect(() => {
     async function payForWork() {
@@ -34,6 +35,7 @@ export default function ViewDataAction({ contractId, setForceRender }) {
   }, []);
 
   async function handleDecode() {
+    const suiClient = new SuiClient({ url: 'https://fullnode.testnet.sui.io:443' });
     const tx = new Transaction();
     const package_id = import.meta.env.VITE_PUBLIC_PACKAGE_ID || "";
 
@@ -48,7 +50,7 @@ export default function ViewDataAction({ contractId, setForceRender }) {
     console.log(toHex(keyId));
     const sealClient = new SealClient({
       suiClient,
-      serverObjectIds: getAllowlistedKeyServers("testnet"),
+      serverObjectIds: getAllowlistedKeyServers("testnet").map((id) => [id, 1]),
       verifyKeyServers: false,
     });
 
@@ -82,7 +84,7 @@ export default function ViewDataAction({ contractId, setForceRender }) {
     // });
     // console.log(new TextDecoder().decode(decryptedBytes))
     // setDecoded(new TextDecoder().decode(decryptedBytes));
-    setDecoded("https://github.com/workRepo.git");
+    setDecoded(contract?.rawData || "");
   }
 
   return (

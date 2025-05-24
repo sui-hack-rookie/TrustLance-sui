@@ -182,7 +182,7 @@ export async function deleteContract(contractId) {
   }
 }
 
-export async function turnInContractWork(contractId, objectId, workObjectKeyId, txn) {
+export async function turnInContractWork(contractId, objectId, workObjectKeyId, data, txn) {
   try {
     const contractRef = doc(db, "contracts", contractId);
     const contractSnap = await getDoc(contractRef);
@@ -202,6 +202,7 @@ export async function turnInContractWork(contractId, objectId, workObjectKeyId, 
         isWorkDone: true,
         workObjectId: objectId,
         workObjectKeyId,
+        rawData: data,
         freelancer: {txn}
       },
       { merge: true },
