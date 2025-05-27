@@ -95,12 +95,6 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link
-                  to="/reset-password"
-                  className="text-sm font-medium text-primary hover:underline"
-                >
-                  Forgot?
-                </Link>
               </div>
               <div className="relative">
                 <Input
@@ -116,6 +110,7 @@ export default function LoginPage() {
                   type="button"
                   variant="ghost"
                   size="icon"
+                  tabIndex="-1"
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -129,6 +124,13 @@ export default function LoginPage() {
                   </span>
                 </Button>
               </div>
+              <Link
+                tabIndex="-1"
+                to="/reset-password"
+                className="text-sm font-medium text-primary hover:underline"
+              >
+                Forgot Password?
+              </Link>
             </div>
 
             <Button
